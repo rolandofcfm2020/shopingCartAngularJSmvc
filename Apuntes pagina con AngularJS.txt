@@ -1,0 +1,147 @@
+Instalar Typescript
+
+1- Crear primero el modelo
+2- Poner el data annotation
+3- Incluir la libreria de TypeLite
+4- Ir a la plantilla TypeLite.Net.tt y borrar el contenido, compilar (ctrl + shift B)
+5- Ejecutar plantilla
+
+Instalar AngularJS 1.6.2
+Instalar AngujarJS.Core  1.4.4
+Instalar angularjs.Typescript.DefinitelyTyped 6.5.6
+Instalar jquery.Typescript.DefinitelyTyped 3.1.1
+
+----------------------------------------Shared html-------------------------
+<!DOCTYPE html>
+<html ng-app="angularApp">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewBag.Title - My ASP.NET Application</title>
+
+    <script src="~/Scripts/modernizr-2.6.2.js"></script>
+    <script src="~/Scripts/jquery-1.10.2.min.js"></script>
+    <script src="~/Scripts/bootstrap.min.js"></script>
+    <script src="~/Scripts/angular.js"></script>
+    <script src="~/Scripts/lodash.js"></script>
+    <script src="~/Scripts/select.js"></script>
+    <script src="~/Scripts/angular-sanitize.js"></script>
+    @Styles.Render("~/Content/css")
+    @Scripts.Render("~/bundles/modernizr")
+
+
+
+
+
+---------------------------controllerJS-----------------------------------
+
+var angularApp = angular.module('angularApp', []);
+
+interface IndexScope extends ng.IScope {
+    message: string;
+}
+
+
+angularApp.controller('indexCtrl', function ($scope: IndexScope, $http: ng.IHttpService) {
+
+    $scope.message = "Bienvenido a mi página web :)";
+
+ $scope.clickButton = function () {
+
+         $http({
+            method: 'GET',
+            url: '../Home/GetData',
+            params: {
+                
+            }
+         }).
+             then(function (response: any) {
+                 debugger;
+                 $scope.items = response.data;
+                 alert("ItemsCount: " + $scope.items.length);
+            });
+
+    }
+});
+
+
+
+-------------------------html view-------------------------------
+
+    <script src="~/Scripts/Controllers/Home/IndexCtrl.js"></script>
+    <div ng-controller="indexCtrl">
+
+
+
+-----------------------banckend--------------------------------
+
+    public JsonNetResult GetJsonNetResult(object data)
+        {
+            JsonNetResult jsonNetResult = new JsonNetResult();
+            jsonNetResult.Formatting = Formatting.Indented;
+            jsonNetResult.Data = data;
+            return jsonNetResult;
+
+        }
+
+        public object SerializeJSONData(object data)
+        {
+            var result = JsonConvert.SerializeObject(data, Newtonsoft.Json.Formatting.None,
+            new Newtonsoft.Json.JsonSerializerSettings
+            {
+                StringEscapeHandling =
+                Newtonsoft.Json.StringEscapeHandling.EscapeHtml
+            });
+
+            return result;
+        }
+
+
+----------------------------------------------------------------------------
+ public class JsonNetResult : ActionResult
+    {
+        public Encoding ContentEncoding { get; set; }
+        public string ContentType { get; set; }
+        public object Data { get; set; }
+        public JsonSerializerSettings SerializerSettings { get; set; }
+        public Formatting Formatting { get; set; }
+        public JsonNetResult()
+        {
+            SerializerSettings = new JsonSerializerSettings();
+        }
+
+        //https://stackoverrun.com/es/q/1033043
+        //https://www.it-swarm.dev/es/asp.net-mvc-3/usar-json.net-como-el-serializador-json-predeterminado-en-asp.net-mvc-3-es-posible/940306399/
+        public override void ExecuteResult(ControllerContext context)
+        {
+            if (context == null)
+                throw new ArgumentNullException("context");
+
+            HttpResponseBase response = context.HttpContext.Response;
+
+            response.ContentType = !string.IsNullOrEmpty(ContentType)
+              ? ContentType
+              : "application/json";
+
+            if (ContentEncoding != null)
+                response.ContentEncoding = ContentEncoding;
+            if (Data != null)
+            {
+                JsonTextWriter writer = new JsonTextWriter(response.Output) { Formatting = Formatting };
+                JsonSerializer serializer = JsonSerializer.Create(SerializerSettings);
+                serializer.Serialize(writer, Data);
+                writer.Flush();
+            }
+        }
+
+    }
+
+---------------------------------------------------------
+ public ActionResult GetData()
+        {
+            var listData = new List<TestModel>();
+            listData.Add(new TestModel() { Age = 23, Name = "Albert" });
+            listData.Add(new TestModel() { Age = 31, Name = "Blanca" });
+
+            return GetJsonNetResult(listData);
+        }

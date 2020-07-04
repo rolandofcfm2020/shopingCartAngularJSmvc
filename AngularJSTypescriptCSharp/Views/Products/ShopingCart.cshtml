@@ -1,0 +1,28 @@
+﻿
+@{
+    ViewBag.Title = "ShopingCart";
+}
+<script src="~/Scripts/Controllers/Products/ShopingCartCtrl.js"></script>
+<h2>ShopingCart</h2>
+
+<div ng-controller="shopingCartCtrl">
+    @*https://stackoverflow.com/questions/28671629/how-to-update-the-ng-model-when-using-ng-options-in-angularjs?answertab=oldest#tab-top*@
+    <select class="input-sm" data-ng-model="selectedItem"
+            ng-options="item as item.ProductName for item in items"></select>
+
+    <button class="btn btn-primary" ng-click="addProduct()">Agregar</button>
+
+    <div ng-repeat="sc in shopingCart">
+
+        {{sc.ProductId}} : 
+        {{sc.Price | currency}}
+        <input class="input-sm" ng-model="sc.Quantity" />
+    </div>
+
+    <br />
+    <button class="btn btn-success" ng-click="saveShopingCart()">Procesar</button>
+
+    <br />
+    Total : {{getTotal()}}
+</div>
+
